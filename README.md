@@ -1,17 +1,23 @@
-# snowflake4go [![Build Status](https://travis-ci.org/LuckyStarry/snowflake4go.svg)](https://travis-ci.org/LuckyStarry/snowflake4go)
+# snowflake [![Build Status](https://travis-ci.org/LuckyStarry/snowflake.svg)](https://travis-ci.org/LuckyStarry/snowflake)
 
-## About snowflake4go
-snowflake4go is an implementation in golang without lock.
+## About
 
-## How to use
+This package is a snowflake implementation in Golang without lock.
+
+## Getting Started
+
+### Installing
+``` go get github.com/LuckyStarry/snowflake ```
+
+### Usage
 ```go
-uid := snowflake4go.NextID()
+uid := snowflake.NextID()
 ```
 
 or you have an explicit worker id (machine id) like this:
 ```go
-uid := snowflake4go.NextIDWorker(workerId)
+uid := snowflake.NextIDWorker(workerId)
 ```
 
 ## Copyright and license
-Code and documentation copyright 2017 Sun Bo. Code released under [the MIT license](https://github.com/LuckyStarry/snowflake4go/blob/master/LICENSE).
+Code and documentation copyright 2017 Sun Bo. Code released under [the MIT license](https://github.com/LuckyStarry/snowflake/blob/master/LICENSE).

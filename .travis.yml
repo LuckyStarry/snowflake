@@ -7,4 +7,4 @@ go:
   - master
 
 script:
-  - go test -v -bench "."
+  - go test -v -bench .

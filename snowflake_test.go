@@ -1,4 +1,4 @@
-package snowflake4go
+package snowflake
 
 import "testing"
 

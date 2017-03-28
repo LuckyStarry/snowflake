@@ -1,4 +1,4 @@
-package snowflake4go
+package snowflake
 
 import "time"
 
@@ -13,23 +13,29 @@ const (
 
 func init() {
 	go func() {
-		var sq int64
-		var ms int64
-		var ts int64 = -1
+		var sq, ms int64
+		var ts = time.Now().UnixNano()
 		for true {
-			ms = <-milliseconds
+			wid := <-worker
+			ms = time.Now().UnixNano()
 			if ms > ts {
 				ts = ms
 				sq = 0
 			}
 			sq++
-			sequence <- sq
+			sequence <- &snowflakeID{ms, wid, sq}
 		}
 	}()
 }
 
-var milliseconds = make(chan int64)
-var sequence = make(chan int64)
+var worker = make(chan int64)
+var sequence = make(chan *snowflakeID)
+
+type snowflakeID struct {
+	timestamp int64
+	workerID  int64
+	sequence  int64
+}
 
 // NextID used to gets an unique id with worker id : 0
 func NextID() int64 {
@@ -39,9 +45,12 @@ func NextID() int64 {
 // NextIDWorker used to gets an unique id with explicit worker id
 func NextIDWorker(workerID int64) int64 {
 	if workerID >= 0 && workerID <= workerIDMax {
-		now := time.Now().UnixNano() / 1000 / 1000
-		milliseconds <- now
-		return <-sequence%sequenceMax | (now-twepoch)<<tsShift | workerID<<wkShift
+		worker <- workerID
+		return (<-sequence).ToInt64()
 	}
 	return -1
+}
+
+func (id *snowflakeID) ToInt64() int64 {
+	return (id.timestamp/1000/1000-twepoch)<<tsShift | id.workerID<<wkShift | id.sequence%sequenceMax
 }
