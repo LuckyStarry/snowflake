@@ -27,6 +27,18 @@ func TestNextIDWorkerError(t *testing.T) {
 	}
 }
 
+func TestNextSnowflakeID(t *testing.T) {
+	sfid := NextSnowflakeID(0)
+	expect := base62encode(sfid.ToInt64())
+	actual := sfid.ToBase62()
+	if expect != actual {
+		t.Logf("sfid:%d", sfid.ToInt64())
+		t.Logf("expect:%s", expect)
+		t.Logf("actual:%s", actual)
+		t.Errorf("base 62 generate failed")
+	}
+}
+
 func TestDuplicate(t *testing.T) {
 	times := 100
 	for i := 0; i < times; i++ {
@@ -54,4 +66,21 @@ func BenchmarkNextIDParallel(b *testing.B) {
 			workerID++
 		}
 	})
+}
+
+// algorithm from network
+var base = []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"}
+
+func base62encode(num int64) string {
+	baseStr := ""
+	for {
+		if num <= 0 {
+			break
+		}
+
+		i := num % 62
+		baseStr += base[i]
+		num = (num - i) / 62
+	}
+	return baseStr
 }

@@ -1,14 +1,19 @@
 package snowflake
 
-import "time"
+import (
+	"bytes"
+	"time"
+)
 
 const (
-	/* 2015-01-01 */
-	twepoch     int64 = 1420041600000
+	// tw (Twitter) epoch is 2010-11-04 01:42:54.657
+	twepoch     int64 = 1288834974657
 	wkShift     uint  = 12
 	tsShift     uint  = 12 + 10
 	workerIDMax       = 0x3ff
 	sequenceMax       = 0xfff
+
+	alphabet62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 )
 
 var workers [workerIDMax]chan chan *snowflakeID
@@ -36,6 +41,12 @@ func process(workerID int64) {
 	}
 }
 
+// ISnowflakeID is an entity of SnowflakeID
+type ISnowflakeID interface {
+	ToInt64() int64
+	ToBase62() string
+}
+
 type snowflakeID struct {
 	timestamp int64
 	workerID  int64
@@ -49,14 +60,32 @@ func NextID() int64 {
 
 // NextIDWorker used to gets an unique id with explicit worker id
 func NextIDWorker(workerID int64) int64 {
-	if workerID >= 0 && workerID <= workerIDMax {
-		var context = make(chan *snowflakeID)
-		workers[workerID] <- context
-		return (<-context).ToInt64()
+	sfid := NextSnowflakeID(workerID)
+	if sfid != nil {
+		return sfid.ToInt64()
 	}
 	return -1
 }
 
+// NextSnowflakeID used to gets an unique id with explicit worker id
+func NextSnowflakeID(workerID int64) ISnowflakeID {
+	if workerID >= 0 && workerID <= workerIDMax {
+		var context = make(chan *snowflakeID)
+		workers[workerID] <- context
+		return <-context
+	}
+	return nil
+}
+
 func (id *snowflakeID) ToInt64() int64 {
 	return (id.timestamp-twepoch)<<tsShift | id.workerID<<wkShift | id.sequence%sequenceMax
+}
+
+func (id *snowflakeID) ToBase62() string {
+	buffer := &bytes.Buffer{}
+	v := id.ToInt64()
+	for ; v > 0; v /= 62 {
+		buffer.WriteByte(alphabet62[v%62])
+	}
+	return buffer.String()
 }
