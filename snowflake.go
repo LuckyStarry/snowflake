@@ -11,41 +11,29 @@ const (
 	sequenceMax       = 0xfff
 )
 
+var workers [workerIDMax]chan chan *snowflakeID
+
 func init() {
-	go func() {
-		var workers [workerIDMax]chan chan *snowflakeID
-		for true {
-			ctx := <-worker
-			wc := workers[ctx.wid]
-			if wc == nil {
-				wc = make(chan chan *snowflakeID)
-				workers[ctx.wid] = wc
-				go func(n int64, c chan chan *snowflakeID) {
-					var ms, ts, sq int64
-					for true {
-						sfc := <-c
-						ms = time.Now().UnixNano()
-						if ms > ts {
-							ts = ms
-							sq = 0
-						}
-						sq++
-						sfc <- &snowflakeID{ms / 1000 / 1000, n, sq - 1}
-					}
-				}(ctx.wid, wc)
-			}
-			go func() {
-				wc <- ctx.sfc
-			}()
-		}
-	}()
+	var workerID int64
+	for ; workerID < workerIDMax; workerID++ {
+		workers[workerID] = make(chan chan *snowflakeID)
+		go process(workerID)
+	}
 }
 
-var worker = make(chan *context)
-
-type context struct {
-	wid int64
-	sfc chan *snowflakeID
+func process(workerID int64) {
+	worker := workers[workerID]
+	var timestamp, lasttime, sequence int64
+	for true {
+		context := <-worker
+		timestamp = time.Now().UnixNano() / 1000 / 1000
+		if timestamp > lasttime {
+			lasttime = timestamp
+			sequence = 0
+		}
+		sequence++
+		context <- &snowflakeID{timestamp, workerID, sequence - 1}
+	}
 }
 
 type snowflakeID struct {
@@ -62,9 +50,9 @@ func NextID() int64 {
 // NextIDWorker used to gets an unique id with explicit worker id
 func NextIDWorker(workerID int64) int64 {
 	if workerID >= 0 && workerID <= workerIDMax {
-		var ctx = &context{workerID, make(chan *snowflakeID)}
-		worker <- ctx
-		return (<-ctx.sfc).ToInt64()
+		var context = make(chan *snowflakeID)
+		workers[workerID] <- context
+		return (<-context).ToInt64()
 	}
 	return -1
 }

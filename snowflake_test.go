@@ -7,8 +7,6 @@ func TestNextID(t *testing.T) {
 	uid2 := NextID()
 	if uid1 == uid2 {
 		t.Errorf("uid equals")
-	} else {
-		t.Logf("UID Duplicate detection pass")
 	}
 }
 
@@ -17,8 +15,15 @@ func TestNextIDWorker(t *testing.T) {
 	uid2 := NextIDWorker(2)
 	if uid1 == uid2 {
 		t.Errorf("uid equals")
-	} else {
-		t.Logf("UID Duplicate detection pass")
+	}
+}
+
+func TestNextIDWorkerError(t *testing.T) {
+	if v := NextIDWorker(-1); v != -1 {
+		t.Errorf("id would be -1 but was %d when worker id is -1", v)
+	}
+	if v := NextIDWorker(0x3ff + 1); v != -1 {
+		t.Errorf("id would be -1 but was %d when worker id is 1024", v)
 	}
 }
 
@@ -33,7 +38,6 @@ func TestDuplicate(t *testing.T) {
 			}
 		}
 	}
-	t.Logf("UID Duplicate detection pass, times %d", times)
 }
 
 func BenchmarkNextID(b *testing.B) {
@@ -44,8 +48,10 @@ func BenchmarkNextID(b *testing.B) {
 
 func BenchmarkNextIDParallel(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
+		var workerID int64
 		for pb.Next() {
-			NextID()
+			NextIDWorker(workerID % 0x3ff)
+			workerID++
 		}
 	})
 }
