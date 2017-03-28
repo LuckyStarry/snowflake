@@ -1,4 +1,5 @@
-# snowflake [![Build Status](https://travis-ci.org/LuckyStarry/snowflake.svg)](https://travis-ci.org/LuckyStarry/snowflake)
+# snowflake
+[![Build Status](https://travis-ci.org/LuckyStarry/snowflake.svg)](https://travis-ci.org/LuckyStarry/snowflake) [![Go Report](https://goreportcard.com/badge/github.com/LuckyStarry/snowflake)](https://goreportcard.com/badge/github.com/LuckyStarry/snowflake)
 
 ## About
 
