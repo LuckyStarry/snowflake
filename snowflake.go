@@ -14,10 +14,10 @@ const (
 func init() {
 	go func() {
 		var sq, ms int64
-		var ts = time.Now().UnixNano()
+		var ts = time.Now().UnixNano() / 1000 / 1000
 		for true {
 			wid := <-worker
-			ms = time.Now().UnixNano()
+			ms = time.Now().UnixNano() / 1000 / 1000
 			if ms > ts {
 				ts = ms
 				sq = 0
@@ -52,5 +52,5 @@ func NextIDWorker(workerID int64) int64 {
 }
 
 func (id *snowflakeID) ToInt64() int64 {
-	return (id.timestamp/1000/1000-twepoch)<<tsShift | id.workerID<<wkShift | id.sequence%sequenceMax
+	return (id.timestamp-twepoch)<<tsShift | id.workerID<<wkShift | id.sequence%sequenceMax
 }
