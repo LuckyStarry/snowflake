@@ -31,10 +31,12 @@ func init() {
 var milliseconds = make(chan int64)
 var sequence = make(chan int64)
 
+// NextID used to gets an unique id with worker id : 0
 func NextID() int64 {
 	return NextIDWorker(0)
 }
 
+// NextIDWorker used to gets an unique id with explicit worker id
 func NextIDWorker(workerID int64) int64 {
 	if workerID >= 0 && workerID <= workerIDMax {
 		now := time.Now().UnixNano() / 1000 / 1000
